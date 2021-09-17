@@ -124,8 +124,9 @@ while setting_now < classes_daily:
     while num_end_time <= num_start_time:
         print("不能在上一节课下课前开始上课. 请输入一个有效时间!")
         end_time, num_end_time = set_end_time()
-    
-    create_child_class = f"""
+
+# Write a block of code that needs to be dynamically run and assign it to the variable create_child_class_code, preparing to be run by exec() below.  
+    create_child_class_code = f"""
 class Class{setting_now}(Class):
     '''
     A class of classes at the same time for every day.
@@ -147,11 +148,11 @@ Class{setting_now}_dict = {{
 json_dump_dict = json.dumps(Class{setting_now}_dict, indent=4)
     """
     
-    exec(create_child_class)
+    exec(create_child_class_code)
 
     # Save settings
     with open('settings.json', 'w') as f:
         json.dump(json_dump_dict, f) # Pylance is unable to detect the actually existing variable inside the string that is operated by exec() above and always reports a problem here, just ignore it.
 
     setting_now += 1
-# While Loop Ends
+# While Loop from Line 51 Ends
