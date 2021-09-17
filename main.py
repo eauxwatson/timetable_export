@@ -1,6 +1,5 @@
 import time
 import os
-from updater import update
 import json
 
 # Initialize
@@ -13,26 +12,26 @@ time.sleep(1)
 
 ver = 0.1  # Remember to change every new version is released!
 
-print("Launching Timetable Export, please wait...")
+print("正在启动 Timetable Export, 请稍后...")
 time.sleep(1)
 os.system(clr)
 
 # Check whether is the first time running and start a guide if is.
 # --snip--
 
-print("It looks that you are well-prepared, so let's get started.")
+print("看来您已经准备好了, 那我们开始吧!")
 time.sleep(1)
 
 # Choose how many classes are there a day.
 while True:
     try:
-        classes_daily = int(input("What's the maximum number of classes a day in your school? "))
+        classes_daily = int(input("在您的学校里, 一天最多会有几节课? "))
     except ValueError:
-        print("Illegal argument. Please enter a valid number!")
+        print("非法参数. 请输入一个有效数字!")
         continue
     else:
         if classes_daily > 20:
-            print("Illegal argument. Please enter a valid number!")
+            print("非法参数. 请输入一个有效数字!")
             continue
         else:
             break
@@ -62,32 +61,31 @@ while setting_now < classes_daily:
         """
         
         while True:
-            start_time = input(f"When does class {setting_now+1} start? (hh:mm, 24-hour time) ")
+            start_time = input(f"请输入第{setting_now+1}节课的上课时间. (hh:mm, 24-hour time) ")
             start_time_split = start_time.split(':')
             
-            if len(start_time_split) != 2:
-                print("Please enter the time correctly!")
+            if len(start_time_split) != 2 or len(start_time_split[0]) != 2 or len(start_time_split[1]) != 2:
+                print("请正确输入时间!")
                 continue
             else:
                 try:
                     num_start_time = int(''.join(start_time_split))
                 except ValueError:
-                    print("Please enter the time correctly!")
+                    print("请正确输入时间!")
                     continue
                 else:
                     if num_start_time > 2400:
-                        print("A class will not start the next day. Please enter the time correctly!")
+                        print("不能在第二天上课. 请正确输入时间!")
                         continue
                     else:
                         break
         
         return start_time, num_start_time
-    # TODO: 限制小时和分钟都必须为两位数
 
     start_time, num_start_time = set_start_time()
     num_end_time = 0000
     while num_start_time <= num_end_time:
-        print("A class should not start before the last class ends. Please enter a valid time!")
+        print("不能在上一节课下课前开始上课. 请输入一个有效时间!")
         start_time, num_start_time = set_start_time()
 
     def set_end_time():
@@ -101,31 +99,30 @@ while setting_now < classes_daily:
         """
         
         while True:
-            end_time = input(f"When does class {setting_now+1} end? (hh:mm, 24-hour time) ")
+            end_time = input(f"请输入第{setting_now+1}节课的下课时间. (hh:mm, 24-hour time) ")
             end_time_split = end_time.split(':')
             
-            if len(end_time_split) != 2:
-                print("Please enter the time correctly!")
+            if len(end_time_split) != 2 or len(end_time_split[0]) != 2 or len(end_time_split[1]) != 2:
+                print("请正确输入时间!")
                 continue
             else:
                 try:
                     num_end_time = int(''.join(end_time_split))
                 except ValueError:
-                    print("Please enter the time correctly!")
+                    print("请正确输入时间!")
                     continue
                 else:
                     if num_end_time >2400:
-                        print("A class will not end the next day. Please enter the time correctly!")
+                        print("不能在第二天下课. 请正确输入时间!")
                         continue
                     else:
                         break
         
         return end_time, num_end_time
-    # TODO: 限制小时和分钟都必须为两位数
 
     end_time, num_end_time = set_end_time()
     while num_end_time <= num_start_time:
-        print("A class should not end before it starts. Please enter a valid time!")
+        print("不能在上一节课下课前开始上课. 请输入一个有效时间!")
         end_time, num_end_time = set_end_time()
     
     create_child_class = f"""
@@ -133,15 +130,28 @@ class Class{setting_now}(Class):
     '''
     A class of classes at the same time for every day.
     
-    :param weekday: The day in a week when an instance of this class
-    :type weekday: int
+    :param day_in_week: The day in a week when an instance of this class.
+    :type day_in_week: int
     '''
         
-    def __init__(self, weekday):
+    def __init__(self, day_in_week):
         self.start_time = '{start_time}'
         self.end_time = '{end_time}'
-        self.weekday = weekday
+        self.day_in_week = day_in_week
+
+Class{setting_now}_dict = {{
+    'start_time': '{start_time}',
+    'end_time': '{end_time}'
+    }}
+
+json_dump_dict = json.dumps(Class{setting_now}_dict, indent=4)
     """
     
     exec(create_child_class)
+
+    # Save settings
+    with open('settings.json', 'w') as f:
+        json.dump(json_dump_dict, f) # Pylance is unable to detect the actually existing variable inside the string that is operated by exec() above and always reports a problem here, just ignore it.
+
     setting_now += 1
+# While Loop Ends
